@@ -1,0 +1,12 @@
+{
+  "build": {
+    "builder": "node",
+    "path": "client"
+  },
+  "deploy": {
+    "startCommand": "npm run build"
+  },
+  "static": {
+    "publishPath": "client/build"
+  }
+}
