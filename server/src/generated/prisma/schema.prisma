@@ -1,0 +1,199 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  slug            String    @unique
+  email           String    @unique
+  phone           String    @unique
+  role            UserRole
+  name            String
+  avatar          String    @db.Text
+  locale          Locale
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  last_login      DateTime?
+  email_validated DateTime?
+  phone_validated DateTime?
+  bio             String?
+  company         String?
+
+  carts          Cart[]
+  orders         Order[]
+  socialProfiles SocialProfile[]
+  credentials    Credential[]
+  reviews        Review[]
+}
+
+enum UserRole {
+  ADMIN
+  CUSTOMER
+  STAFF
+}
+
+enum Locale {
+  EN
+  AR
+  FR
+}
+
+model Cart {
+  id         String   @id @default(uuid()) @db.Uuid
+  created_by String
+  created    User     @relation(fields: [created_by], references: [id])
+  status     Status
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  items CartItem[]
+}
+
+enum Status {
+  ACTIVE
+  ORDERED
+  ABANDONNED
+}
+
+model Order {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+
+  lines OrderLine[]
+}
+
+model SocialProfile {
+  user_id       String
+  user          User           @relation(fields: [user_id], references: [id])
+  platform      SocialPlatform
+  platform_user String
+  created_at    DateTime       @default(now())
+
+  @@id([user_id, platform])
+}
+
+enum SocialPlatform {
+  FACEBOOK
+  GITHUB
+  INSTAGRAM
+  TWITTER
+}
+
+model Credential {
+  provider_id   Provider
+  provider_key  String
+  user_id       String
+  user          User       @relation(fields: [user_id], references: [id])
+  hasher        HashMethod
+  password_hash String
+  password_salt String
+
+  @@id([provider_id, provider_key])
+}
+
+enum Provider {
+  GOOGLE
+  FACEBOOK
+  TWITTER
+  EMAIL
+}
+
+enum HashMethod {
+  md5
+  sha1
+  sha256
+}
+
+model CartItem {
+  id         String   @id @default(uuid()) @db.Uuid
+  created_at DateTime @default(now())
+
+  cart_id String @db.Uuid
+  cart    Cart   @relation(fields: [cart_id], references: [id])
+
+  product_id String  @db.Uuid
+  product    Product @relation(fields: [product_id], references: [id])
+
+  price    Float
+  quantity Int
+}
+
+model Product {
+  id             String       @id @default(uuid()) @db.Uuid
+  category_id    String       @db.Uuid
+  category       Category     @relation(fields: [category_id], references: [id])
+  title          String
+  picture        String
+  summary        String
+  description    String
+  price          Float
+  discount_type  DiscountType @default(none)
+  discount_value Float
+  tags           String[]
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+
+  cart_items  CartItem[]
+  order_lines OrderLine[]
+  reviews     Review[]
+}
+
+enum DiscountType {
+  none
+  percent
+  amount
+}
+
+model OrderLine {
+  id       String @id @default(uuid()) @db.Uuid
+  order_id String @db.Uuid
+  order    Order  @relation(fields: [order_id], references: [id])
+
+  product_id String  @db.Uuid
+  product    Product @relation(fields: [product_id], references: [id])
+
+  price    Float
+  quantity Int
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  user_id    String
+  product_id String   @db.Uuid
+  rating     Int
+  comment    String
+  created_at DateTime @default(now())
+
+  user    User    @relation(fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+
+  @@unique([user_id, product_id])
+}
+
+model Category {
+  id              String   @id @default(uuid()) @db.Uuid
+  parent_category String?  @db.Uuid
+  slug            String   @unique
+  name            String
+  description     String
+  tags            String[]
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryToCategory", fields: [parent_category], references: [id])
+  children Category[] @relation("CategoryToCategory")
+  products Product[]
+
+  @@index([parent_category])
+  @@index([slug])
+}
