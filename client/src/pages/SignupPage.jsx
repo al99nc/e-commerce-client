@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 
 function SignupPage() {
   const [formData, setFormData] = useState({
-    name: "",
+    full_name: "",
     email: "",
     phone: "",
     password: "",
