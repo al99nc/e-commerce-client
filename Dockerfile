@@ -1,18 +1,21 @@
 # Stage 1: Build the React application
 # Use a recent Node.js LTS image for the build environment
-FROM node:22-alpine as builder
+FROM node:22-alpine AS builder
 
 # Set the working directory inside the container
-WORKDIR /src
+WORKDIR /app
 
-# Copy package.json and package-lock.json (or pnpm-lock.yaml/yarn.lock)
-COPY package*.json ./
+# Copy package.json and package-lock.json from the client folder
+COPY client/package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application source code
-COPY . .
+# Copy the rest of the client application source code
+COPY client/ ./
+
+# Build the app for production
+RUN npm run build
 
 # Build the app for production
 RUN npm run build

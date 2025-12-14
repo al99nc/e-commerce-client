@@ -1,0 +1,6 @@
+# .dockerignore
+node_modules
+dist
+Dockerfile
+.dockerignore
+# Add any other files or directories you want to ignore (e.g., .git)docker build -t aloo121/ecommerce-client .docker build -t aloo121/ecommerce-client .docker build -t aloo121/ecommerce-client .
